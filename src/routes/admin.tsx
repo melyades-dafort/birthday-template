@@ -85,33 +85,46 @@ function AdminPage() {
     const baseUrl = window.location.origin;
     const shareableLink = `${baseUrl}/?data=${encoded}`;
     
+    // Copy link to clipboard
     try {
-      // Try is.gd API (better CORS support than TinyURL)
-      const response = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(shareableLink)}`);
-      
-      if (response.ok) {
-        const shortUrl = await response.text();
-        
-        // Verify it's actually a short URL
-        if (shortUrl && (shortUrl.startsWith('https://is.gd/') || shortUrl.startsWith('http://is.gd/'))) {
-          // Copy short URL to clipboard
-          await navigator.clipboard.writeText(shortUrl);
-          alert('✅ SHORT LINK CREATED!\n\n' + shortUrl + '\n\n📱 Link copied! Send this to share your customized birthday greeting!');
-          return;
-        }
-      }
-      
-      throw new Error('Shortening failed');
+      await navigator.clipboard.writeText(shareableLink);
     } catch (error) {
-      console.error('URL shortening error:', error);
-      // Fallback: copy original long link
-      try {
-        await navigator.clipboard.writeText(shareableLink);
-        alert('✅ Link copied!\n\n(URL shortening unavailable - using full link)\n\n📱 Send this link to share your customized birthday greeting:\n\n' + shareableLink.substring(0, 100) + '...');
-      } catch {
-        prompt('Copy this shareable link:', shareableLink);
-      }
+      console.error('Failed to copy to clipboard:', error);
     }
+    
+    // Show options
+    const result = confirm(
+      '✅ Link copied to clipboard!\n\n' +
+      'Choose how to share:\n\n' +
+      'OK = Generate QR Code (recommended for mobile)\n' +
+      'Cancel = Just use the link'
+    );
+    
+    if (result) {
+      // Generate QR code
+      generateQRCode(shareableLink);
+    } else {
+      alert('📱 Share the link:\n\n' + shareableLink.substring(0, 100) + '...');
+    }
+  };
+
+  const generateQRCode = (url: string) => {
+    // Use QR Code API to generate QR image
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
+    
+    // Create a temporary link to download the QR code
+    const link = document.createElement('a');
+    link.href = qrCodeUrl;
+    link.download = 'birthday-greeting-qr-code.png';
+    
+    // Show QR code in a new tab for preview
+    window.open(qrCodeUrl, '_blank');
+    
+    // Also trigger download
+    setTimeout(() => {
+      link.click();
+      alert('🎉 QR Code generated!\n\n✅ QR Code opened in new tab\n✅ QR Code downloaded\n\n📱 Share this QR code image!\nAnyone who scans it will see your customized birthday greeting!');
+    }, 500);
   };
 
   const handleImageUpload = (memoryId: number, file: File) => {
@@ -386,7 +399,7 @@ function AdminPage() {
               size="lg"
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              🔗 Generate Shareable Link
+              📱 Share Link / QR Code
             </Button>
           </div>
         </div>
