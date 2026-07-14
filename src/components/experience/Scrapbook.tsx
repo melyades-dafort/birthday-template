@@ -6,7 +6,7 @@ import { useExperience } from "./useExperience";
 import { MemoryImage } from "./MemoryImage";
 
 export function Scrapbook() {
-  const { phase, selectedId, setPhase, selectMemory, explored } = useExperience();
+  const { phase, selectedId, setPhase, selectMemory, explored, markExplored } = useExperience();
   const { memories } = useBirthdayData();
   const [turning, setTurning] = useState<"idle" | "next" | "prev">("idle");
   const [displayId, setDisplayId] = useState<number | null>(selectedId);
@@ -24,8 +24,11 @@ export function Scrapbook() {
     const nextIdx = (idx + (dir === "next" ? 1 : -1) + memories.length) % memories.length;
     setTurning(dir);
     setTimeout(() => {
-      setDisplayId(memories[nextIdx].id);
-      selectMemory(memories[nextIdx].id);
+      const nextMemory = memories[nextIdx];
+      setDisplayId(nextMemory.id);
+      selectMemory(nextMemory.id);
+      // Mark as explored when navigating with next/prev
+      markExplored(nextMemory.id);
     }, 450);
     setTimeout(() => setTurning("idle"), 900);
   };
