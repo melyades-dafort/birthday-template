@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Placeholder Memory Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #E875A5;
+        }
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        canvas {
+            width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #E875A5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #F7A8C4;
+        }
+        .info {
+            background: #fff8f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #E875A5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎂 Birthday Memory Images</h1>
+        
+        <div class="info">
+            <strong>Note:</strong> This tool creates simple placeholder images. For the best experience, 
+            replace these with your own photos in the <code>public/memories/</code> folder!
+        </div>
+
+        <button onclick="generatePlaceholders()">Generate Placeholder Images</button>
+        <button onclick="downloadAll()">Download All (ZIP)</button>
+        
+        <div class="canvas-grid" id="canvasGrid"></div>
+        
+        <div class="info">
+            <h3>How to add your images:</h3>
+            <ol>
+                <li>Add your photos to: <code>public/memories/</code></li>
+                <li>Name them: <code>memory-1.jpg</code> through <code>memory-12.jpg</code></li>
+                <li>Recommended size: 800x1000px (portrait)</li>
+                <li>Refresh your browser to see the changes!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const colors = [
+            '#FF6B9D', '#FFD93D', '#6BCF7F', '#4ECDC4', '#C77DFF',
+            '#FF9CEE', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
+            '#FFEAA7', '#DFE6E9'
+        ];
+
+        function generatePlaceholders() {
+            const grid = document.getElementById('canvasGrid');
+            grid.innerHTML = '';
+            
+            for (let i = 1; i <= 12; i++) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 800;
+                canvas.height = 1000;
+                canvas.id = `canvas-${i}`;
+                
+                const ctx = canvas.getContext('2d');
+                
+                // Gradient background
+                const gradient = ctx.createLinearGradient(0, 0, 0, 1000);
+                gradient.addColorStop(0, colors[i - 1]);
+                gradient.addColorStop(1, colors[(i + 3) % colors.length]);
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 800, 1000);
+                
+                // Add text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 80px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Memory ${i}`, 400, 500);
+                
+                // Add heart
+                ctx.font = '120px Arial';
+                ctx.fillText('♡', 400, 650);
+                
+                grid.appendChild(canvas);
+                
+                // Auto-download
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.download = `memory-${i}.jpg`;
+                    link.href = canvas.toDataURL('image/jpeg', 0.9);
+                    link.click();
+                }, i * 100);
+            }
+        }
+
+        function downloadAll() {
+            alert('Click "Generate Placeholder Images" first, then each image will download automatically!');
+        }
+    </script>
+</body>
+</html>
