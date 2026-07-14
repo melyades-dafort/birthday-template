@@ -88,43 +88,11 @@ function AdminPage() {
     // Copy link to clipboard
     try {
       await navigator.clipboard.writeText(shareableLink);
+      alert('✅ Shareable Link Copied!\n\n📱 The link has been copied to your clipboard.\n\nSimply paste and send it via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!');
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      // Fallback if clipboard fails
+      prompt('Copy this shareable link:', shareableLink);
     }
-    
-    // Show options
-    const result = confirm(
-      '✅ Link copied to clipboard!\n\n' +
-      'Choose how to share:\n\n' +
-      'OK = Generate QR Code (recommended for mobile)\n' +
-      'Cancel = Just use the link'
-    );
-    
-    if (result) {
-      // Generate QR code
-      generateQRCode(shareableLink);
-    } else {
-      alert('📱 Share the link:\n\n' + shareableLink.substring(0, 100) + '...');
-    }
-  };
-
-  const generateQRCode = (url: string) => {
-    // Use QR Code API to generate QR image
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}`;
-    
-    // Create a temporary link to download the QR code
-    const link = document.createElement('a');
-    link.href = qrCodeUrl;
-    link.download = 'birthday-greeting-qr-code.png';
-    
-    // Show QR code in a new tab for preview
-    window.open(qrCodeUrl, '_blank');
-    
-    // Also trigger download
-    setTimeout(() => {
-      link.click();
-      alert('🎉 QR Code generated!\n\n✅ QR Code opened in new tab\n✅ QR Code downloaded\n\n📱 Share this QR code image!\nAnyone who scans it will see your customized birthday greeting!');
-    }, 500);
   };
 
   const handleImageUpload = (memoryId: number, file: File) => {
@@ -399,7 +367,7 @@ function AdminPage() {
               size="lg"
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              📱 Share Link / QR Code
+              🔗 Generate Shareable Link
             </Button>
           </div>
         </div>
