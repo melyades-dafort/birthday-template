@@ -4,14 +4,24 @@ import LZString from 'lz-string';
 
 // Helper to encode/decode data for URL sharing
 function encodeDataForURL(data: BirthdayData): string {
-  return LZString.compressToEncodedURIComponent(JSON.stringify(data));
+  return LZString.compressToBase64(JSON.stringify(data));
 }
 
 function decodeDataFromURL(encoded: string): BirthdayData | null {
   try {
-    const json = LZString.decompressFromEncodedURIComponent(encoded);
-    if (!json) return null;
-    return JSON.parse(json);
+    // Try base64 compression (newest format)
+    const json = LZString.decompressFromBase64(encoded);
+    if (json) {
+      return JSON.parse(json);
+    }
+    
+    // Fallback to URI component compression
+    const json2 = LZString.decompressFromEncodedURIComponent(encoded);
+    if (json2) {
+      return JSON.parse(json2);
+    }
+    
+    return null;
   } catch {
     return null;
   }
@@ -49,13 +59,13 @@ export function useBirthdayData() {
   });
 
   useEffect(() => {
-    // First, check if there's data in URL parameters (try both new and old formats)
+    // First, check if there's data in URL parameters (try all formats)
     const urlParams = new URLSearchParams(window.location.search);
-    const compressedData = urlParams.get('d'); // New compressed format
+    const compressedData = urlParams.get('d'); // Compressed format
     const oldData = urlParams.get('data'); // Old base64 format
     
     if (compressedData) {
-      const decoded = decodeDataFromURL(compressedData);
+      const decoded = decodeDataFromURL(decodeURIComponent(compressedData));
       if (decoded) {
         setData(decoded);
         return;

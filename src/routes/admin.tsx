@@ -81,17 +81,17 @@ function AdminPage() {
     localStorage.setItem('birthdayData', JSON.stringify(data));
     localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
     
-    // Generate shareable link with compression
-    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+    // Generate shareable link with maximum compression
+    const compressed = LZString.compressToBase64(JSON.stringify(data));
     const baseUrl = window.location.origin;
-    const shareableLink = `${baseUrl}/?d=${compressed}`;
+    const shareableLink = `${baseUrl}/?d=${encodeURIComponent(compressed)}`;
     
     // Copy link to clipboard
     try {
       await navigator.clipboard.writeText(shareableLink);
       
       // Calculate size reduction
-      const originalSize = btoa(encodeURIComponent(JSON.stringify(data))).length;
+      const originalSize = JSON.stringify(data).length;
       const compressedSize = compressed.length;
       const reduction = Math.round((1 - compressedSize / originalSize) * 100);
       
