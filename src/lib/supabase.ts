@@ -1,9 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase configuration
-// These will be set as environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Using direct values for Vercel deployment (these are public anon keys - safe to expose)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://zkdqljffitzvunaaanjs.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprcWRsbGp0ZnR6dnVuYWFhbmpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMzY3MTYsImV4cCI6MjA5OTYxMjcxNn0.lNlM1XdG8yfS2f_2PBqtKSzbA1XR9ae1LI9T7jB0gPg';
 
 // Create Supabase client (only if credentials are provided)
 export const supabase = supabaseUrl && supabaseAnonKey 
