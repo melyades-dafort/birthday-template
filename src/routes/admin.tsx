@@ -85,19 +85,15 @@ function AdminPage() {
     const baseUrl = window.location.origin;
     const shareableLink = `${baseUrl}/?data=${encoded}`;
     
-    // Show loading message
-    const loadingMsg = 'Generating shareable link... Please wait...';
-    
     try {
-      // Try to shorten the URL using TinyURL API
-      const tinyUrlEndpoint = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(shareableLink)}`;
-      const response = await fetch(tinyUrlEndpoint);
+      // Try is.gd API (better CORS support than TinyURL)
+      const response = await fetch(`https://is.gd/create.php?format=simple&url=${encodeURIComponent(shareableLink)}`);
       
       if (response.ok) {
         const shortUrl = await response.text();
         
         // Verify it's actually a short URL
-        if (shortUrl && shortUrl.startsWith('https://tinyurl.com/')) {
+        if (shortUrl && (shortUrl.startsWith('https://is.gd/') || shortUrl.startsWith('http://is.gd/'))) {
           // Copy short URL to clipboard
           await navigator.clipboard.writeText(shortUrl);
           alert('✅ SHORT LINK CREATED!\n\n' + shortUrl + '\n\n📱 Link copied! Send this to share your customized birthday greeting!');
