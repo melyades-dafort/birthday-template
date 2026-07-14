@@ -28,8 +28,15 @@ function generateShortId(): string {
 
 // Create a short URL
 export async function createShortUrl(data: string, origin: string) {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured, using fallback');
+  console.log('🔍 createShortUrl called');
+  console.log('📊 Data length:', data.length, 'chars');
+  console.log('🌐 Origin:', origin);
+  
+  const isConfigured = isSupabaseConfigured();
+  console.log('⚙️ Supabase configured:', isConfigured);
+  
+  if (!isConfigured) {
+    console.warn('⚠️ Supabase not configured, using fallback');
     return {
       shortUrl: `${origin}/?d=${encodeURIComponent(data)}`,
       fallback: true,
@@ -39,9 +46,14 @@ export async function createShortUrl(data: string, origin: string) {
 
   try {
     const shortId = generateShortId();
+    console.log('🎲 Generated shortId:', shortId);
+    
     const expiresAt = new Date();
     expiresAt.setFullYear(expiresAt.getFullYear() + 1); // 1 year from now
+    console.log('⏰ Expires at:', expiresAt.toISOString());
 
+    console.log('💾 Attempting to insert into Supabase...');
+    
     // Insert into Supabase
     const { error } = await supabase!
       .from('short_urls')
@@ -53,11 +65,12 @@ export async function createShortUrl(data: string, origin: string) {
       });
 
     if (error) {
-      console.error('Supabase insert error:', error);
+      console.error('❌ Supabase insert error:', error);
       throw error;
     }
 
-    console.log(`✅ Created short URL: ${shortId}`);
+    console.log(`✅ SUCCESS! Created short URL: ${shortId}`);
+    console.log(`🔗 Short URL: ${origin}/s/${shortId}`);
 
     return {
       shortUrl: `${origin}/s/${shortId}`,
@@ -66,7 +79,7 @@ export async function createShortUrl(data: string, origin: string) {
       fallback: false,
     };
   } catch (error) {
-    console.error('Error creating short URL:', error);
+    console.error('💥 Error creating short URL:', error);
     
     // Fallback to compressed URL
     return {

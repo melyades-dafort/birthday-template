@@ -77,22 +77,33 @@ function AdminPage() {
   };
 
   const handleGenerateLink = async () => {
+    console.log('🚀 Generate Shareable Link clicked');
+    
     // First save the data
     localStorage.setItem('birthdayData', JSON.stringify(data));
     localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
     
     // Generate shareable link with LZString compression
     const compressed = LZString.compressToBase64(JSON.stringify(data));
+    console.log('📦 Compressed data length:', compressed.length, 'chars');
+    
     const baseUrl = window.location.origin;
+    console.log('🌐 Base URL:', baseUrl);
     
     try {
+      console.log('📥 Importing Supabase module...');
       // Try to use Supabase for super short URLs
       const { createShortUrl, isSupabaseConfigured } = await import('@/lib/supabase');
+      console.log('✅ Supabase module imported');
       
+      console.log('🔍 Checking if Supabase is configured...');
       if (isSupabaseConfigured()) {
+        console.log('✅ Supabase IS configured, attempting to create short URL...');
         const result = await createShortUrl(compressed, baseUrl);
+        console.log('📊 Supabase result:', result);
         
         if (result.shortId && !result.fallback) {
+          console.log('🎉 SUCCESS! Super short URL created:', result.shortUrl);
           // Success! Got a database-backed super short URL
           await navigator.clipboard.writeText(result.shortUrl);
           
@@ -102,12 +113,17 @@ function AdminPage() {
           
           alert(`✅ Super Short Link Copied!\n\n📏 URL reduced by ${reduction}%\n🔗 ${result.shortUrl}\n📊 Only ${result.shortUrl.length} characters!\n\n✨ Works with uploaded photos!\n⏰ Valid for 1 year\n\n📱 Paste and send via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!`);
           return;
+        } else {
+          console.warn('⚠️ Supabase returned fallback response:', result);
         }
+      } else {
+        console.warn('⚠️ Supabase is NOT configured');
       }
     } catch (error) {
-      console.error('Database shortening failed, using fallback:', error);
+      console.error('💥 Database shortening failed, using fallback:', error);
     }
     
+    console.log('📦 Using compression-only fallback...');
     // Fallback: use compressed URL if database fails
     const shareableLink = `${baseUrl}/?d=${encodeURIComponent(compressed)}`;
     
