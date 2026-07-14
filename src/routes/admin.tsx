@@ -81,7 +81,7 @@ function AdminPage() {
     localStorage.setItem('birthdayData', JSON.stringify(data));
     localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
     
-    // Generate shareable link with maximum compression
+    // Generate shareable link with LZString compression
     const compressed = LZString.compressToBase64(JSON.stringify(data));
     const baseUrl = window.location.origin;
     const shareableLink = `${baseUrl}/?d=${encodeURIComponent(compressed)}`;
@@ -95,7 +95,11 @@ function AdminPage() {
       const compressedSize = compressed.length;
       const reduction = Math.round((1 - compressedSize / originalSize) * 100);
       
-      alert(`✅ Short Link Copied!\n\n📏 Link size reduced by ${reduction}%\n\n📱 Paste and send via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!`);
+      // Calculate URL length for display
+      const urlLength = shareableLink.length;
+      const urlLengthText = urlLength > 1000 ? `${Math.round(urlLength/1000)}k chars` : `${urlLength} chars`;
+      
+      alert(`✅ Short Link Copied!\n\n📏 Link size reduced by ${reduction}%\n📊 URL length: ${urlLengthText}\n\n💡 TIP: Using image URLs (not uploads) keeps links shorter!\n\n📱 Paste and send via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!`);
     } catch (error) {
       // Fallback if clipboard fails
       prompt('Copy this shareable link:', shareableLink);
@@ -279,6 +283,37 @@ function AdminPage() {
                             }}
                             className="text-sm mt-1"
                           />
+                          <p className="text-xs text-amber-600 mt-1">
+                            ⚠️ Uploading files makes URLs very long. For shorter links, use image URLs instead.
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor={`url-${memory.id}`} className="text-sm font-semibold">
+                            Or Paste Image URL (Recommended)
+                          </Label>
+                          <Input
+                            id={`url-${memory.id}`}
+                            type="url"
+                            value={memory.image.startsWith('data:') ? '' : memory.image}
+                            onChange={(e) => {
+                              const url = e.target.value;
+                              setData(prev => ({
+                                ...prev,
+                                memories: prev.memories.map(m =>
+                                  m.id === memory.id ? { ...m, image: url } : m
+                                ),
+                              }));
+                              if (url) {
+                                setPreviewImages(prev => ({ ...prev, [memory.id]: url }));
+                              }
+                            }}
+                            placeholder="https://i.ibb.co/abc123/photo.jpg"
+                            className="text-sm mt-1"
+                          />
+                          <p className="text-xs text-green-600 mt-1">
+                            ✅ Image URLs keep shareable links short! Use ImgBB, Imgur, or Cloudinary.
+                          </p>
                         </div>
                         
                         <div>

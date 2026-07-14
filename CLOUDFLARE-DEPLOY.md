@@ -1,5 +1,11 @@
 # 🚀 Deploy to Cloudflare Pages - QUICK FIX!
 
+> **🎯 NEW: 95% URL Shortening Available!**  
+> After deploying, you can set up Cloudflare KV for super short shareable URLs.  
+> See [URL-SHORTENING-GUIDE.md](./URL-SHORTENING-GUIDE.md) for 5-minute setup!
+
+---
+
 ## ✅ Why Cloudflare Instead of Netlify?
 
 Your app is built with **SSR (Server-Side Rendering)** using TanStack Start.

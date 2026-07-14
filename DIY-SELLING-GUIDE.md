@@ -210,13 +210,14 @@ and family. Have fun! ✨
 
 Create STUNNING 3D birthday greetings yourself!
 
-✨ What you get:
+### ✨ What you get:
 • Easy-to-use template
 • Customizable admin panel
 • 12 photo slots
 • Custom music upload
 • Beautiful animations
 • Works on ANY device
+• 📱 Super short shareable links (95% reduction!)
 
 💰 ONLY ₱799!
 ♾️ USE UNLIMITED TIMES!
