@@ -1,29 +1,24 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tantml:router';
+import { getShortUrl } from '@/lib/supabase';
 
 export const Route = createFileRoute('/s/$id')({
   loader: async ({ params }) => {
     const { id } = params;
     
     try {
-      // Call the API route to retrieve data from KV
-      const response = await fetch(`/api/retrieve?id=${id}`);
+      // Retrieve data from Supabase
+      const data = await getShortUrl(id);
       
-      if (!response.ok) {
-        // API call failed or data not found - redirect to home
-        throw redirect({ to: '/' });
-      }
-
-      const result = await response.json();
-      
-      if (!result.data) {
-        // No data returned - redirect to home
+      if (!data) {
+        // Data not found or expired - redirect to home
         throw redirect({ to: '/' });
       }
 
       // Redirect to home with the compressed data
       throw redirect({ 
         to: '/',
-        search: { d: result.data },
+        search: { d: data },
       });
     } catch (error) {
       // On any error, redirect to home
