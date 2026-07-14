@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { birthdayConfig, memories, type Memory } from '@/data/memories';
+import LZString from 'lz-string';
 
 // Helper to encode/decode data for URL sharing
 function encodeDataForURL(data: BirthdayData): string {
-  const json = JSON.stringify(data);
-  return btoa(encodeURIComponent(json));
+  return LZString.compressToEncodedURIComponent(JSON.stringify(data));
 }
 
 function decodeDataFromURL(encoded: string): BirthdayData | null {
   try {
-    const json = decodeURIComponent(atob(encoded));
+    const json = LZString.decompressFromEncodedURIComponent(encoded);
+    if (!json) return null;
     return JSON.parse(json);
   } catch {
     return null;
@@ -48,15 +49,28 @@ export function useBirthdayData() {
   });
 
   useEffect(() => {
-    // First, check if there's data in URL parameters
+    // First, check if there's data in URL parameters (try both new and old formats)
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedData = urlParams.get('data');
+    const compressedData = urlParams.get('d'); // New compressed format
+    const oldData = urlParams.get('data'); // Old base64 format
     
-    if (sharedData) {
-      const decoded = decodeDataFromURL(sharedData);
+    if (compressedData) {
+      const decoded = decodeDataFromURL(compressedData);
       if (decoded) {
         setData(decoded);
         return;
+      }
+    }
+    
+    // Fallback to old format for backwards compatibility
+    if (oldData) {
+      try {
+        const json = decodeURIComponent(atob(oldData));
+        const parsed = JSON.parse(json);
+        setData(parsed);
+        return;
+      } catch {
+        // Continue to localStorage
       }
     }
     

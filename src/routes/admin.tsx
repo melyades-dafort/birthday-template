@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LZString from 'lz-string';
 
 export const Route = createFileRoute('/admin')({
   component: AdminPage,
@@ -80,15 +81,21 @@ function AdminPage() {
     localStorage.setItem('birthdayData', JSON.stringify(data));
     localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
     
-    // Generate shareable link
-    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    // Generate shareable link with compression
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
     const baseUrl = window.location.origin;
-    const shareableLink = `${baseUrl}/?data=${encoded}`;
+    const shareableLink = `${baseUrl}/?d=${compressed}`;
     
     // Copy link to clipboard
     try {
       await navigator.clipboard.writeText(shareableLink);
-      alert('✅ Shareable Link Copied!\n\n📱 The link has been copied to your clipboard.\n\nSimply paste and send it via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!');
+      
+      // Calculate size reduction
+      const originalSize = btoa(encodeURIComponent(JSON.stringify(data))).length;
+      const compressedSize = compressed.length;
+      const reduction = Math.round((1 - compressedSize / originalSize) * 100);
+      
+      alert(`✅ Short Link Copied!\n\n📏 Link size reduced by ${reduction}%\n\n📱 Paste and send via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!`);
     } catch (error) {
       // Fallback if clipboard fails
       prompt('Copy this shareable link:', shareableLink);
