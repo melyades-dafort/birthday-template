@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { birthdayConfig, memories, type Memory } from '@/data/memories';
 
+// Helper to encode/decode data for URL sharing
+function encodeDataForURL(data: BirthdayData): string {
+  const json = JSON.stringify(data);
+  return btoa(encodeURIComponent(json));
+}
+
+function decodeDataFromURL(encoded: string): BirthdayData | null {
+  try {
+    const json = decodeURIComponent(atob(encoded));
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
 interface BirthdayData {
   celebrantName: string;
   backgroundMusic?: string;
@@ -33,7 +48,19 @@ export function useBirthdayData() {
   });
 
   useEffect(() => {
-    // Load from localStorage
+    // First, check if there's data in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedData = urlParams.get('data');
+    
+    if (sharedData) {
+      const decoded = decodeDataFromURL(sharedData);
+      if (decoded) {
+        setData(decoded);
+        return;
+      }
+    }
+    
+    // Otherwise, load from localStorage
     const saved = localStorage.getItem('birthdayData');
     if (saved) {
       try {
@@ -96,5 +123,11 @@ export function useBirthdayData() {
     memories: fullMemories,
     finalMessage: data.finalMessage,
     backgroundMusic: data.backgroundMusic || '/audio/birthday-ambient.mp3', // Default to Kabisado
+    // Export function to generate shareable link
+    generateShareableLink: () => {
+      const encoded = encodeDataForURL(data);
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/?data=${encoded}`;
+    },
   };
 }

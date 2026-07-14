@@ -75,6 +75,25 @@ function AdminPage() {
     alert('Changes saved successfully! Refresh the main page to see updates.');
   };
 
+  const handleGenerateLink = () => {
+    // First save the data
+    localStorage.setItem('birthdayData', JSON.stringify(data));
+    localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
+    
+    // Generate shareable link
+    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    const baseUrl = window.location.origin;
+    const shareableLink = `${baseUrl}/?data=${encoded}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareableLink).then(() => {
+      alert('✅ Shareable link copied to clipboard!\n\nSend this link to share your customized birthday greeting:\n\n' + shareableLink);
+    }).catch(() => {
+      // Fallback if clipboard API fails
+      prompt('Copy this shareable link:', shareableLink);
+    });
+  };
+
   const handleImageUpload = (memoryId: number, file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -334,13 +353,22 @@ function AdminPage() {
           >
             ← Back to Birthday Experience
           </a>
-          <Button
-            onClick={handleSave}
-            size="lg"
-            className="bg-berry hover:bg-berry/90 text-white"
-          >
-            Save Changes
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSave}
+              size="lg"
+              className="bg-berry hover:bg-berry/90 text-white"
+            >
+              Save Changes
+            </Button>
+            <Button
+              onClick={handleGenerateLink}
+              size="lg"
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              🔗 Generate Shareable Link
+            </Button>
+          </div>
         </div>
       </div>
     </div>
