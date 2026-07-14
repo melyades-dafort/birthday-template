@@ -75,7 +75,7 @@ function AdminPage() {
     alert('Changes saved successfully! Refresh the main page to see updates.');
   };
 
-  const handleGenerateLink = () => {
+  const handleGenerateLink = async () => {
     // First save the data
     localStorage.setItem('birthdayData', JSON.stringify(data));
     localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
@@ -85,13 +85,31 @@ function AdminPage() {
     const baseUrl = window.location.origin;
     const shareableLink = `${baseUrl}/?data=${encoded}`;
     
-    // Copy to clipboard
-    navigator.clipboard.writeText(shareableLink).then(() => {
-      alert('✅ Shareable link copied to clipboard!\n\nSend this link to share your customized birthday greeting:\n\n' + shareableLink);
-    }).catch(() => {
-      // Fallback if clipboard API fails
-      prompt('Copy this shareable link:', shareableLink);
-    });
+    try {
+      // Try to shorten the URL using TinyURL API
+      const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(shareableLink)}`);
+      
+      if (response.ok) {
+        const shortUrl = await response.text();
+        
+        // Copy short URL to clipboard
+        navigator.clipboard.writeText(shortUrl).then(() => {
+          alert('✅ Short link copied to clipboard!\n\n' + shortUrl + '\n\nSend this link to share your customized birthday greeting!');
+        }).catch(() => {
+          prompt('Copy this short link:', shortUrl);
+        });
+      } else {
+        // Fallback to original long link if shortening fails
+        throw new Error('Shortening failed');
+      }
+    } catch (error) {
+      // Fallback: copy original long link
+      navigator.clipboard.writeText(shareableLink).then(() => {
+        alert('✅ Shareable link copied to clipboard!\n\n(Link shortening unavailable - using full link)\n\nSend this link to share your customized birthday greeting:\n\n' + shareableLink);
+      }).catch(() => {
+        prompt('Copy this shareable link:', shareableLink);
+      });
+    }
   };
 
   const handleImageUpload = (memoryId: number, file: File) => {
