@@ -1,4 +1,4 @@
-// Server-only function for URL shortening with D1 database
+// Server-only function for URL shortening with Cloudflare KV
 'use server';
 
 export async function shortenUrl(data: string, origin: string) {
@@ -6,12 +6,12 @@ export async function shortenUrl(data: string, origin: string) {
     // Generate a short random ID (6 characters)
     const shortId = generateShortId();
     
-    // Get D1 database binding
-    // @ts-ignore - DB binding from Cloudflare Workers
-    const DB = (globalThis as any).DB || process.env.DB;
+    // Get KV namespace binding
+    // @ts-ignore - KV binding from Cloudflare Workers
+    const KV = (globalThis as any).BIRTHDAY_KV || process.env.BIRTHDAY_KV;
     
-    if (!DB) {
-      // Fallback: If DB is not available, return the compressed URL format
+    if (!KV) {
+      // Fallback: If KV is not available, return the compressed URL format
       return {
         shortUrl: `${origin}/?d=${encodeURIComponent(data)}`,
         fallback: true,
@@ -20,14 +20,9 @@ export async function shortenUrl(data: string, origin: string) {
     }
 
     // Store data with 1 year expiration
-    const now = Date.now();
-    const expiresAt = now + (365 * 24 * 60 * 60 * 1000); // 1 year from now
+    const expiresAt = Date.now() + (365 * 24 * 60 * 60 * 1000); // 1 year
     
-    await DB.prepare(
-      'INSERT INTO birthday_links (id, data, created_at, expires_at) VALUES (?, ?, ?, ?)'
-    )
-      .bind(shortId, data, now, expiresAt)
-      .run();
+    await KV.put(shortId, data, { expirationTtl: 31536000 }); // 1 year in seconds
     
     return {
       shortUrl: `${origin}/s/${shortId}`,

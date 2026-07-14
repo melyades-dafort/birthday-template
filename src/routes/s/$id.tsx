@@ -5,38 +5,27 @@ export const Route = createFileRoute('/s/$id')({
     const { id } = params;
     
     try {
-      // Get D1 database binding
-      // @ts-ignore - DB binding from Cloudflare Workers
-      const DB = (globalThis as any).DB || process.env.DB;
+      // Get KV namespace binding
+      // @ts-ignore - KV binding from Cloudflare Workers
+      const KV = (globalThis as any).BIRTHDAY_KV || process.env.BIRTHDAY_KV;
       
-      if (!DB) {
-        // DB not available - redirect to home
+      if (!KV) {
+        // KV not available - redirect to home
         throw redirect({ to: '/' });
       }
 
-      // Query the database for the short ID
-      const result = await DB.prepare(
-        'SELECT data, expires_at FROM birthday_links WHERE id = ?'
-      )
-        .bind(id)
-        .first();
+      // Get data from KV
+      const data = await KV.get(id);
       
-      if (!result) {
+      if (!data) {
         // Short ID not found - redirect to home
-        throw redirect({ to: '/' });
-      }
-
-      // Check if link has expired
-      const now = Date.now();
-      if (result.expires_at < now) {
-        // Link expired - redirect to home
         throw redirect({ to: '/' });
       }
 
       // Redirect to home with the compressed data
       throw redirect({ 
         to: '/',
-        search: { d: result.data },
+        search: { d: data },
       });
     } catch (error) {
       // On any error, redirect to home

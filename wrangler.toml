@@ -2,8 +2,7 @@ name = "birthday-template"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = ".output/public"
 
-# D1 Database for URL shortening (95% reduction)
-[[d1_databases]]
-binding = "DB"
-database_name = "birthday-db"
-database_id = "1100187c-802c-4e88-926c-bbd79cb6d305"
+# KV Namespace for URL shortening (95% reduction)
+[[kv_namespaces]]
+binding = "BIRTHDAY_KV"
+id = "b1e9eb8faef7405e92d43c0a27c8e679"
