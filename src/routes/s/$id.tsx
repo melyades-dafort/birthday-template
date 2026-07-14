@@ -5,27 +5,25 @@ export const Route = createFileRoute('/s/$id')({
     const { id } = params;
     
     try {
-      // Get KV namespace binding
-      // @ts-ignore - KV binding from Cloudflare Workers
-      const KV = (globalThis as any).BIRTHDAY_KV || process.env.BIRTHDAY_KV;
+      // Call the API route to retrieve data from KV
+      const response = await fetch(`/api/retrieve?id=${id}`);
       
-      if (!KV) {
-        // KV not available - redirect to home
+      if (!response.ok) {
+        // API call failed or data not found - redirect to home
         throw redirect({ to: '/' });
       }
 
-      // Get data from KV
-      const data = await KV.get(id);
+      const result = await response.json();
       
-      if (!data) {
-        // Short ID not found - redirect to home
+      if (!result.data) {
+        // No data returned - redirect to home
         throw redirect({ to: '/' });
       }
 
       // Redirect to home with the compressed data
       throw redirect({ 
         to: '/',
-        search: { d: data },
+        search: { d: result.data },
       });
     } catch (error) {
       // On any error, redirect to home
