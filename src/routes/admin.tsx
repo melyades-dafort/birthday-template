@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LZString from 'lz-string';
+import { shortenUrl } from '@/lib/shorten.server';
 
 export const Route = createFileRoute('/admin')({
   component: AdminPage,
@@ -84,9 +85,29 @@ function AdminPage() {
     // Generate shareable link with LZString compression
     const compressed = LZString.compressToBase64(JSON.stringify(data));
     const baseUrl = window.location.origin;
+    
+    try {
+      // Try to use the database API for super short URLs
+      const result = await shortenUrl(compressed, baseUrl);
+      
+      if (result.shortUrl && !result.fallback) {
+        // Success! Got a database-backed super short URL
+        await navigator.clipboard.writeText(result.shortUrl);
+        
+        // Calculate size reduction
+        const originalUrl = `${baseUrl}/?data=${encodeURIComponent(JSON.stringify(data))}`;
+        const reduction = Math.round((1 - result.shortUrl.length / originalUrl.length) * 100);
+        
+        alert(`✅ Super Short Link Copied!\n\n📏 URL reduced by ${reduction}%\n🔗 ${result.shortUrl}\n📊 Only ${result.shortUrl.length} characters!\n\n✨ Works with uploaded photos!\n⏰ Valid for 1 year\n\n📱 Paste and send via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!`);
+        return;
+      }
+    } catch (error) {
+      console.error('Database shortening failed, using fallback:', error);
+    }
+    
+    // Fallback: use compressed URL if database fails
     const shareableLink = `${baseUrl}/?d=${encodeURIComponent(compressed)}`;
     
-    // Copy link to clipboard
     try {
       await navigator.clipboard.writeText(shareableLink);
       
@@ -99,7 +120,7 @@ function AdminPage() {
       const urlLength = shareableLink.length;
       const urlLengthText = urlLength > 1000 ? `${Math.round(urlLength/1000)}k chars` : `${urlLength} chars`;
       
-      alert(`✅ Short Link Copied!\n\n📏 Link size reduced by ${reduction}%\n📊 URL length: ${urlLengthText}\n\n💡 TIP: Using image URLs (not uploads) keeps links shorter!\n\n📱 Paste and send via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!`);
+      alert(`✅ Link Copied! (Compressed)\n\n📏 Data compressed by ${reduction}%\n📊 URL length: ${urlLengthText}\n\n💡 For super short URLs (95% reduction):\n   Set up Cloudflare D1 database\n   See D1-SETUP.md for instructions\n\n📱 Paste and send via:\n• WhatsApp\n• Messenger\n• SMS\n• Email\n\nThe recipient will see your customized birthday greeting!`);
     } catch (error) {
       // Fallback if clipboard fails
       prompt('Copy this shareable link:', shareableLink);
