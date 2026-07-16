@@ -59,7 +59,8 @@ export function useBirthdayData() {
   });
 
   useEffect(() => {
-    // First, check if there's data in URL parameters (try all formats)
+    // Only load from URL parameters - never from localStorage
+    // This ensures the template always shows defaults unless opened via a shareable link
     const urlParams = new URLSearchParams(window.location.search);
     const compressedData = urlParams.get('d'); // Compressed format
     const oldData = urlParams.get('data'); // Old base64 format
@@ -80,47 +81,11 @@ export function useBirthdayData() {
         setData(parsed);
         return;
       } catch {
-        // Continue to localStorage
+        // Use defaults
       }
     }
     
-    // Otherwise, load from localStorage
-    const saved = localStorage.getItem('birthdayData');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        
-        // Migrate old data structure if needed
-        if (parsed.memories && parsed.memories.length > 0) {
-          // Check if old structure (with 'caption' instead of 'title' and 'message')
-          const firstMemory = parsed.memories[0];
-          if (firstMemory.caption !== undefined && firstMemory.title === undefined) {
-            // Old structure - needs migration
-            console.log('Migrating old birthday data structure...');
-            const migratedMemories = memories.map((defaultMem, index) => {
-              const oldMem = parsed.memories[index];
-              return {
-                id: defaultMem.id,
-                image: oldMem?.image || defaultMem.image,
-                title: defaultMem.title,
-                message: defaultMem.message,
-              };
-            });
-            
-            setData({
-              celebrantName: parsed.celebrantName || birthdayConfig.celebrantName,
-              memories: migratedMemories,
-              finalMessage: parsed.finalMessage || birthdayConfig.finalMessage,
-            });
-            return;
-          }
-        }
-        
-        setData(parsed);
-      } catch (error) {
-        console.error('Failed to parse birthday data:', error);
-      }
-    }
+    // No URL data = show default template (no localStorage)
   }, []);
 
   // Merge with full memory data for complete Memory objects

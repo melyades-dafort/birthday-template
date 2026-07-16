@@ -35,54 +35,33 @@ function AdminPage() {
   const [previewImages, setPreviewImages] = useState<{ [key: number]: string }>({});
   const [musicPreview, setMusicPreview] = useState<string | undefined>();
 
-  // Load existing data from localStorage on mount
+  // Always load default data - admin never reads from localStorage
+  // Each customer's customization lives only in their shareable link
   useEffect(() => {
-    const saved = localStorage.getItem('birthdayData');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setData(parsed);
-      
-      // Load preview images
-      const savedPreviews = localStorage.getItem('birthdayPreviews');
-      if (savedPreviews) {
-        setPreviewImages(JSON.parse(savedPreviews));
-      }
-      
-      // Load music preview
-      if (parsed.backgroundMusic) {
-        setMusicPreview(parsed.backgroundMusic);
-      }
-    } else {
-      // Initialize with default data from memories.ts
-      import('@/data/memories').then(({ memories, birthdayConfig }) => {
-        const defaultMemories = memories.map(m => ({
-          id: m.id,
-          image: m.image,
-          title: m.title,
-          message: m.message,
-        }));
-        setData({
-          celebrantName: birthdayConfig.celebrantName,
-          memories: defaultMemories,
-          finalMessage: birthdayConfig.finalMessage,
-        });
+    import('@/data/memories').then(({ memories, birthdayConfig }) => {
+      const defaultMemories = memories.map(m => ({
+        id: m.id,
+        image: m.image,
+        title: m.title,
+        message: m.message,
+      }));
+      setData({
+        celebrantName: birthdayConfig.celebrantName,
+        memories: defaultMemories,
+        finalMessage: birthdayConfig.finalMessage,
       });
-    }
+    });
   }, []);
 
   const handleSave = () => {
-    localStorage.setItem('birthdayData', JSON.stringify(data));
-    localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
-    alert('Changes saved successfully! Refresh the main page to see updates.');
+    // No longer saving to localStorage - each customer gets their own link
+    // Data is preserved in the shareable link only
   };
 
   const handleGenerateLink = async () => {
     console.log('🚀 Generate Shareable Link clicked');
     
-    // First save the data
-    localStorage.setItem('birthdayData', JSON.stringify(data));
-    localStorage.setItem('birthdayPreviews', JSON.stringify(previewImages));
-    
+    // Don't save to localStorage - data lives only in the shareable link
     // Generate shareable link with LZString compression
     const compressed = LZString.compressToBase64(JSON.stringify(data));
     console.log('📦 Compressed data length:', compressed.length, 'chars');
@@ -187,6 +166,34 @@ function AdminPage() {
     }));
   };
 
+  const handleClearGeneral = () => {
+    if (!confirm('Reset name and music to defaults?')) return;
+    setData(prev => ({ ...prev, celebrantName: 'Amelia', backgroundMusic: undefined }));
+    setMusicPreview(undefined);
+  };
+
+  const handleClearPhotos = () => {
+    if (!confirm('Reset all photos, titles, and messages to defaults? This cannot be undone.')) return;
+    import('@/data/memories').then(({ memories }) => {
+      const defaultMemories = memories.map(m => ({
+        id: m.id,
+        image: m.image,
+        title: m.title,
+        message: m.message,
+      }));
+      setData(prev => ({ ...prev, memories: defaultMemories }));
+      setPreviewImages({});
+    });
+  };
+
+  const handleClearMessages = () => {
+    if (!confirm('Reset the final message to default?')) return;
+    setData(prev => ({
+      ...prev,
+      finalMessage: 'May this new chapter of your life be filled with beautiful memories, exciting adventures, peaceful days, and dreams slowly becoming reality. Never forget how special you are and how much happiness you bring into the lives of the people around you.',
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-pink-100 p-6">
       <div className="max-w-6xl mx-auto">
@@ -207,9 +214,19 @@ function AdminPage() {
           {/* General Tab */}
           <TabsContent value="general">
             <Card>
-              <CardHeader>
-                <CardTitle>Birthday Person's Name</CardTitle>
-                <CardDescription>Customize who this birthday gift is for</CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>Birthday Person's Name</CardTitle>
+                  <CardDescription>Customize who this birthday gift is for</CardDescription>
+                </div>
+                <Button
+                  onClick={handleClearGeneral}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50 shrink-0"
+                >
+                  🗑️ Reset to Default
+                </Button>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -286,9 +303,19 @@ function AdminPage() {
           {/* Photos Tab */}
           <TabsContent value="photos">
             <Card>
-              <CardHeader>
-                <CardTitle>Memory Photos</CardTitle>
-                <CardDescription>Upload photos and add both a title and detailed message for each memory in the scrapbook</CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>Memory Photos</CardTitle>
+                  <CardDescription>Upload photos and add both a title and detailed message for each memory in the scrapbook</CardDescription>
+                </div>
+                <Button
+                  onClick={handleClearPhotos}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50 shrink-0"
+                >
+                  🗑️ Reset All Photos
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -398,9 +425,19 @@ function AdminPage() {
           {/* Messages Tab */}
           <TabsContent value="messages">
             <Card>
-              <CardHeader>
-                <CardTitle>Final Greeting Message</CardTitle>
-                <CardDescription>Customize the birthday message at the end of the experience</CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle>Final Greeting Message</CardTitle>
+                  <CardDescription>Customize the birthday message at the end of the experience</CardDescription>
+                </div>
+                <Button
+                  onClick={handleClearMessages}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50 shrink-0"
+                >
+                  🗑️ Reset to Default
+                </Button>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
@@ -428,7 +465,7 @@ function AdminPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Save Button */}
+        {/* Bottom Actions */}
         <div className="mt-8 flex justify-between items-center">
           <a
             href="/"
@@ -437,13 +474,6 @@ function AdminPage() {
             ← Back to Birthday Experience
           </a>
           <div className="flex gap-3">
-            <Button
-              onClick={handleSave}
-              size="lg"
-              className="bg-berry hover:bg-berry/90 text-white"
-            >
-              Save Changes
-            </Button>
             <Button
               onClick={handleGenerateLink}
               size="lg"
