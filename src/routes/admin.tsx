@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LZString from 'lz-string';
+import { validatePasscode } from '@/lib/supabase';
 
 export const Route = createFileRoute('/admin')({
   component: AdminPage,
@@ -14,7 +15,7 @@ export const Route = createFileRoute('/admin')({
 
 interface BirthdayData {
   celebrantName: string;
-  backgroundMusic?: string; // Optional custom music URL
+  backgroundMusic?: string;
   memories: {
     id: number;
     image: string;
@@ -24,7 +25,89 @@ interface BirthdayData {
   finalMessage: string;
 }
 
+// ── Passcode Gate ─────────────────────────────────────────────────────────────
+function PasscodeGate({ onSuccess }: { onSuccess: () => void }) {
+  const [code, setCode] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    if (!code.trim()) return;
+    setChecking(true);
+    setError('');
+    const valid = await validatePasscode(code.trim());
+    setChecking(false);
+    if (valid) {
+      sessionStorage.setItem('adminPasscode', code.trim());
+      onSuccess();
+    } else {
+      setError('Invalid or expired passcode. Please contact your developer.');
+      setCode('');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-pink-100 flex items-center justify-center p-6">
+      <Card className="w-full max-w-sm shadow-xl">
+        <CardHeader className="text-center">
+          <div className="text-5xl mb-2">🎂</div>
+          <CardTitle className="text-2xl font-serif">Birthday Admin</CardTitle>
+          <CardDescription>Enter the passcode provided by your developer to continue</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Access Passcode</Label>
+            <Input
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              placeholder="XXXX-XXXX"
+              className="text-center text-xl font-mono tracking-widest"
+              maxLength={9}
+            />
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          </div>
+          <Button
+            onClick={handleSubmit}
+            disabled={checking || !code.trim()}
+            className="w-full bg-berry hover:bg-berry/90 text-white"
+          >
+            {checking ? '⏳ Checking...' : '✨ Enter Admin'}
+          </Button>
+          <p className="text-xs text-gray-400 text-center">
+            Passcodes expire after 24 hours
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function AdminPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check if already authenticated in this session
+    const saved = sessionStorage.getItem('adminPasscode');
+    if (saved) {
+      // Re-validate on mount
+      import('@/lib/supabase').then(({ validatePasscode }) => {
+        validatePasscode(saved).then((valid) => {
+          if (valid) setIsAuthenticated(true);
+          else sessionStorage.removeItem('adminPasscode');
+        });
+      });
+    }
+  }, []);
+
+  if (!isAuthenticated) {
+    return <PasscodeGate onSuccess={() => setIsAuthenticated(true)} />;
+  }
+
+  return <AdminContent />;
+}
+
+function AdminContent() {
   const [data, setData] = useState<BirthdayData>({
     celebrantName: 'Amelia',
     backgroundMusic: undefined,

@@ -122,3 +122,83 @@ export async function getShortUrl(id: string) {
     return null;
   }
 }
+
+// ─── Passcode System ─────────────────────────────────────────────────────────
+
+// Generate a human-friendly 8-character passcode (no ambiguous chars)
+function generatePasscode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/I/1
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    if (i === 4) result += '-'; // format: XXXX-XXXX
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// Create a passcode that expires in 24 hours
+export async function createPasscode(label: string): Promise<{ passcode: string; expiresAt: Date } | null> {
+  if (!isSupabaseConfigured()) return null;
+
+  const passcode = generatePasscode();
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + 24);
+
+  const { error } = await supabase!
+    .from('passcodes')
+    .insert({
+      code: passcode,
+      label,
+      expires_at: expiresAt.toISOString(),
+      created_at: new Date().toISOString(),
+    });
+
+  if (error) {
+    console.error('Error creating passcode:', error);
+    return null;
+  }
+
+  return { passcode, expiresAt };
+}
+
+// Validate a passcode - returns true if valid and not expired
+export async function validatePasscode(code: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  const { data, error } = await supabase!
+    .from('passcodes')
+    .select('expires_at')
+    .eq('code', code.toUpperCase().replace(/\s/g, ''))
+    .single();
+
+  if (error || !data) return false;
+
+  const expiresAt = new Date(data.expires_at);
+  return expiresAt > new Date();
+}
+
+// Get all active passcodes (for developer view)
+export async function getActivePasscodes(): Promise<Array<{ code: string; label: string; expires_at: string }>> {
+  if (!isSupabaseConfigured()) return [];
+
+  const { data, error } = await supabase!
+    .from('passcodes')
+    .select('code, label, expires_at')
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error || !data) return [];
+  return data;
+}
+
+// Delete/revoke a passcode
+export async function revokePasscode(code: string): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+
+  const { error } = await supabase!
+    .from('passcodes')
+    .delete()
+    .eq('code', code);
+
+  return !error;
+}
