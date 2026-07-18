@@ -439,34 +439,6 @@ function AdminContent() {
                         </div>
                         
                         <div>
-                          <Label htmlFor={`url-${memory.id}`} className="text-sm font-semibold">
-                            Or Paste Image URL (Recommended)
-                          </Label>
-                          <Input
-                            id={`url-${memory.id}`}
-                            type="url"
-                            value={memory.image.startsWith('data:') ? '' : memory.image}
-                            onChange={(e) => {
-                              const url = e.target.value;
-                              setData(prev => ({
-                                ...prev,
-                                memories: prev.memories.map(m =>
-                                  m.id === memory.id ? { ...m, image: url } : m
-                                ),
-                              }));
-                              if (url) {
-                                setPreviewImages(prev => ({ ...prev, [memory.id]: url }));
-                              }
-                            }}
-                            placeholder="https://i.ibb.co/abc123/photo.jpg"
-                            className="text-sm mt-1"
-                          />
-                          <p className="text-xs text-green-600 mt-1">
-                            ✅ Image URLs keep shareable links short! Use ImgBB, Imgur, or Cloudinary.
-                          </p>
-                        </div>
-                        
-                        <div>
                           <Label htmlFor={`title-${memory.id}`} className="text-sm font-semibold">
                             Title
                           </Label>
