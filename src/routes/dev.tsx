@@ -10,8 +10,8 @@ export const Route = createFileRoute('/dev')({
   component: DevPage,
 });
 
-// Your secret master password - change this!
-const MASTER_PASSWORD = import.meta.env.VITE_DEV_PASSWORD || 'BirthdayDev2024!';
+// Your secret master password - set via VITE_DEV_PASSWORD environment variable
+const MASTER_PASSWORD = import.meta.env.VITE_DEV_PASSWORD || 'MelquiadesAdmin0211';
 
 function DevPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
